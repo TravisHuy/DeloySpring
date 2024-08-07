@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product List</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+        .add-product {
+            margin-bottom: 20px;
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .actions form {
+            display: inline;
+        }
+        .actions button {
+            margin: 2px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Product List</h1>
+    <form th:action="@{/products/add}" method="get">
+        <button type="submit" class="add-product">Add New Product</button>
+    </form>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}">
+            <td th:text="${product.id}"></td>
+            <td th:text="${product.name}"></td>
+            <td th:text="${product.price}"></td>
+            <td class="actions">
+                <form th:action="@{/products/edit/{id}(id=${product.id})}" method="get">
+                    <button type="submit">Edit</button>
+                </form>
+                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post">
+                    <input type="hidden" name="_method" value="delete" />
+                    <button type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
