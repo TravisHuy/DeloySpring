@@ -13,7 +13,7 @@
     <groupId>com.nhathuy.docker</groupId>
     <artifactId>DeploySpring</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>DeploySpring</name>
     <description>DeploySpring</description>

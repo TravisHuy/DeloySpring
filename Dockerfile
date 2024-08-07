@@ -4,13 +4,13 @@
 FROM maven:3.8.3-openjdk-17 AS build
 WORKDIR /app
 COPY . /app/
-RUN mvn clean package -DskipTests
+RUN mvn clean package
 
 #
 # Package stage
 #
-FROM openjdk:17-jdk-slim
+FROM openjdk:17-alpine
 WORKDIR /app
-COPY --from=build /app/target/DeloySpring-0.0.1-SNAPSHOT.war deloyspring.war
+COPY --from=build /app/target/*.jar /app/app.jar
 EXPOSE 8080
-ENTRYPOINT ["java","-jar","deloyspring.war"]
+ENTRYPOINT ["java","-jar","app.jar"]
