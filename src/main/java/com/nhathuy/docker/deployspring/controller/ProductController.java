@@ -19,6 +19,7 @@ public class ProductController {
         model.addAttribute("products", productService.getAllProducts());
         return "products/list";
     }
+    
 
     @GetMapping("/add")
     public String showAddForm(Model model) {
