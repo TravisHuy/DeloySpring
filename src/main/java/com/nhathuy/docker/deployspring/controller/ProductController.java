@@ -4,15 +4,27 @@ package com.nhathuy.docker.deployspring.controller;
 import com.nhathuy.docker.deployspring.model.Product;
 import com.nhathuy.docker.deployspring.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @Controller
 @RequestMapping("/products")
 public class ProductController {
     @Autowired
     private ProductService productService;
+
+    @Value("${product.image.upload.dir}")
+    private String uploadDir;
 
     @GetMapping
     public String listProducts(Model model) {
@@ -28,7 +40,8 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    public String addProduct(@ModelAttribute Product product) {
+    public String addProduct(@ModelAttribute Product product,@RequestParam("imageFile")MultipartFile multipartFile) {
+        saveImage(product,multipartFile);
         productService.saveProduct(product);
         return "redirect:/products";
     }
@@ -41,14 +54,29 @@ public class ProductController {
     }
 
     @PostMapping("/edit")
-    public String editProduct(@ModelAttribute Product product) {
+    public String editProduct(@ModelAttribute Product product, @RequestParam("imageFile")MultipartFile multipartFile) {
+        saveImage(product,multipartFile);
         productService.saveProduct(product);
         return "redirect:/products";
     }
-
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return "redirect:/products";
     }
+
+    private void saveImage(Product product, MultipartFile imageFile) {
+        if(!imageFile.isEmpty()){
+            try{
+                String fileName= imageFile.getOriginalFilename();
+                Path path= Paths.get(uploadDir+fileName);
+                Files.copy(imageFile.getInputStream(),path, StandardCopyOption.REPLACE_EXISTING);
+                product.setImage(fileName);
+            }
+            catch(IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

@@ -42,15 +42,14 @@
 <body>
 <div class="container">
     <h1>Product List</h1>
-    <form th:action="@{/products/add}" method="get">
-        <button type="submit" class="add-product">Add New Product</button>
-    </form>
+    <a th:href="@{/products/add}" class="add-product">Add New Product</a>
     <table>
         <thead>
         <tr>
             <th>ID</th>
             <th>Name</th>
             <th>Price</th>
+            <th>Image</th>
             <th>Actions</th>
         </tr>
         </thead>
@@ -59,13 +58,12 @@
             <td th:text="${product.id}"></td>
             <td th:text="${product.name}"></td>
             <td th:text="${product.price}"></td>
+            <td><img th:if="${product.image}" th:src="@{${'/uploads/' + product.image}}" alt="Product Image" width="100"></td>
             <td class="actions">
-                <form th:action="@{/products/edit/{id}(id=${product.id})}" method="get">
-                    <button type="submit">Edit</button>
-                </form>
-                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post">
+                <a th:href="@{/products/edit/{id}(id=${product.id})}" class="btn btn-primary">Edit</a>
+                <form th:action="@{/products/delete/{id}(id=${product.id})}" method="post" style="display:inline;">
                     <input type="hidden" name="_method" value="delete" />
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this product?');">Delete</button>
                 </form>
             </td>
         </tr>
