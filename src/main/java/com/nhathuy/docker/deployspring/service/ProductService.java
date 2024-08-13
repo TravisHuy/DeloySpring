@@ -1,6 +1,5 @@
 package com.nhathuy.docker.deployspring.service;
 
-
 import com.nhathuy.docker.deployspring.model.Product;
 import com.nhathuy.docker.deployspring.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,21 +10,9 @@ import java.util.List;
 @Service
 public class ProductService {
     @Autowired
-    ProductRepository productRepository;
+    ProductRepository repository;
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
-    }
-
-    public Product saveProduct(Product product) {
-        return productRepository.save(product);
-    }
-
-    public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+    public List<Product> getAllProduct(){
+        return repository.findAll();
     }
 }
