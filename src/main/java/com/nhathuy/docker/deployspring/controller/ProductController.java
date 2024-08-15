@@ -117,5 +117,89 @@ public class ProductController {
             return "error"; // Create an error.html template to display errors
         }
     }
+    @PostMapping("/edit")
+    public String editProduct(@Valid @ModelAttribute("productDto") ProductDTO productDTO,
+                              BindingResult result,
+                              @RequestParam("id") Long id,
+                              Model model) {
+
+        // Kiểm tra nếu có lỗi trong quá trình validate
+        if (result.hasErrors()) {
+            // Lấy thông tin sản phẩm hiện tại để hiển thị lại trên form
+            Product existingProduct = repo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+            model.addAttribute("product", existingProduct);
+            return "products/editProduct";
+        }
+
+        // Tìm sản phẩm hiện tại từ database
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found"));
+
+        // Cập nhật thông tin sản phẩm từ DTO
+        product.setName(productDTO.getName());
+        product.setBrand(productDTO.getBrand());
+        product.setCategory(productDTO.getCategory());
+        product.setPrice(productDTO.getPrice());
+        product.setDescription(productDTO.getDescription());
+
+        // Xử lý ảnh nếu có tải lên ảnh mới
+        MultipartFile image = productDTO.getImageFile();
+        if (image != null && !image.isEmpty()) {
+            UUID uuid = UUID.randomUUID();
+            String storageFileName = uuid + "_" + image.getOriginalFilename();
+
+            try {
+                String uploadDir = "public/images/";
+                Path uploadPath = Paths.get(uploadDir);
+
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+
+                try (InputStream inputStream = image.getInputStream()) {
+                    Files.copy(inputStream, Paths.get(uploadDir + storageFileName), StandardCopyOption.REPLACE_EXISTING);
+                }
+
+                // Cập nhật tên file ảnh mới vào product
+                product.setImageFileName(storageFileName);
+
+            } catch (IOException e) {
+                System.out.println("Exception: " + e.getMessage());
+                result.rejectValue("imageFile", "error.imageFile", "Failed to upload image");
+                return "products/editProduct";
+            }
+        }
+
+        // Lưu cập nhật vào database
+        repo.save(product);
+
+        // Chuyển hướng về trang danh sách sản phẩm sau khi chỉnh sửa thành công
+        return "redirect:/products";
+    }
+
+    @GetMapping("/delete/{id}")
+    public String deleteProduct(@PathVariable Long id, Model model) {
+        try {
+            Product product = repo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Product not found"));
+
+            // Xóa file ảnh từ hệ thống tệp nếu cần
+            String imagePath = "public/images/" + product.getImageFileName();
+            try {
+                Files.deleteIfExists(Paths.get(imagePath));
+            } catch (IOException e) {
+                System.out.println("Failed to delete image file: " + e.getMessage());
+            }
+
+            repo.delete(product);
+        } catch (Exception e) {
+            e.printStackTrace();
+            model.addAttribute("errorMessage", "An error occurred while deleting the product.");
+            return "error";
+        }
+
+        return "redirect:/products";
+    }
 
 }
