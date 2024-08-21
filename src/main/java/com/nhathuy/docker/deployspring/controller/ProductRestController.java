@@ -36,49 +36,14 @@ public class ProductRestController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createProduct(@Valid @RequestBody ProductDTO productDTO){
-        if (productDTO.getImageFile() == null || productDTO.getImageFile().isEmpty()) {
+    public ResponseEntity<?> createProduct(@RequestBody Product product){
+        if (product.getImageFileName() == null || product.getImageFileName().isEmpty()) {
             return ResponseEntity.badRequest().body("The image file is required");
         }
-
-        String storageFileName = saveImage(productDTO.getImageFile());
-        if (storageFileName == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save image");
-        }
-
-        Product product = new Product();
-        product.setName(productDTO.getName());
-        product.setBrand(productDTO.getBrand());
-        product.setCategory(productDTO.getCategory());
-        product.setPrice(productDTO.getPrice());
-        product.setDescription(productDTO.getDescription());
-        product.setImageFileName(storageFileName);
-
         Product savedProduct = repo.save(product);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
     }
 
-    private String saveImage(MultipartFile image) {
-        UUID uuid = UUID.randomUUID();
-        String storageFileName = uuid + "_" + image.getOriginalFilename();
-
-        try {
-            String uploadDir = "public/images/";
-            Path uploadPath = Paths.get(uploadDir);
-
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
-            try (InputStream inputStream = image.getInputStream()) {
-                Files.copy(inputStream, Paths.get(uploadDir + storageFileName), StandardCopyOption.REPLACE_EXISTING);
-            }
-            return storageFileName;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
     @GetMapping("/{id}")
     public ResponseEntity<?> getProduct(@PathVariable Long id){
         return repo.findById(id)
@@ -86,23 +51,19 @@ public class ProductRestController {
                 .orElse(ResponseEntity.notFound().build());
     }
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductDTO productDTO) {
+    public ResponseEntity<?> updateProduct(@PathVariable Long id,@RequestBody Product product) {
         return repo.findById(id)
-                .map(product -> {
-                    product.setName(productDTO.getName());
-                    product.setBrand(productDTO.getBrand());
-                    product.setCategory(productDTO.getCategory());
-                    product.setPrice(productDTO.getPrice());
-                    product.setDescription(productDTO.getDescription());
+                .map(p -> {
+                    p.setName(product.getName());
+                    p.setBrand(product.getBrand());
+                    p.setCategory(product.getCategory());
+                    p.setPrice(product.getPrice());
+                    p.setDescription(product.getDescription());
 
-                    if (productDTO.getImageFile() != null && !productDTO.getImageFile().isEmpty()) {
-                        String storageFileName = saveImage(productDTO.getImageFile());
-                        if (storageFileName != null) {
-                            product.setImageFileName(storageFileName);
-                        }
+                    if(product.getImageFileName()!=null && !product.getImageFileName().isEmpty()){
+                        p.setImageFileName(product.getImageFileName());
                     }
-
-                    Product updatedProduct = repo.save(product);
+                    Product updatedProduct = repo.save(p);
                     return ResponseEntity.ok(updatedProduct);
                 })
                 .orElse(ResponseEntity.notFound().build());
@@ -111,19 +72,9 @@ public class ProductRestController {
     public ResponseEntity<?> deleteProduct(@PathVariable Long id){
         return repo.findById(id)
                 .map(product -> {
-                    deleteImage(product.getImageFileName());
                     repo.delete(product);
                     return ResponseEntity.ok().build();
                 })
                 .orElse(ResponseEntity.notFound().build());
-    }
-
-    private void deleteImage(String fileName) {
-        try {
-            String imagePath = "public/images/" + fileName;
-            Files.deleteIfExists(Paths.get(imagePath));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 }
